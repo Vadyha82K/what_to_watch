@@ -6,6 +6,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, URLField
 from wtforms.validators import DataRequired, Length, Optional
+import csv
+import click
+
 
 app = Flask(__name__)
 
@@ -51,6 +54,21 @@ def index_view():
     offset_value = randrange(quantity)
     opinion = Opinion.query.offset(offset_value).first()
     return render_template('opinion.html', opinion=opinion)
+
+
+@app.cli.command('load_opinions')
+def load_opinions_command():
+    """Функция загрузки мнений в базу данных."""
+    with open('opinions.csv', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        counter = 0
+        for row in reader:
+            opinion = Opinion(**row)
+            db.session.add(opinion)
+            db.session.commit()
+            counter += 1
+    click.echo(f'Загружено мнений {counter}')
+
 
 
 @app.route('/add', methods=['GET', 'POST'])
